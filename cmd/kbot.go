@@ -52,6 +52,8 @@ to quickly create a Cobra application.`,
 			switch payload {
 			case "hello":
 				return m.Send(fmt.Sprintf("Hello! I'm KBot, your friendly Telegram bot version: %s \n", appVersion))
+			case "hi":
+				return m.Send("Hi! \n")
 			default:
 				return m.Send("Sorry, I didn't understand that command.")
 			}
