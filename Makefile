@@ -5,12 +5,35 @@
 # Use short aliases as:
 # make linux; make linux-arm64; make windows; make macos; make macos-arm64
 
-#hardcoded defaults entries
+# hardcoded defaults entries
 APP_NAME=kbot
 BUILD_DIR=build
-REGISTRY=alexskl25
-TARGETOS=linux #default entries for OS
-TARGETARCH=amd64 #default entries for ARCH
+REGISTRY=ghcr.io/alexskl25# customize you container registry
+
+# Define APP + Version
+APP=$(shell basename $(shell git remote get-url origin))
+VERSION=$(shell git describe --tags --abbrev=0)-$(shell git rev-parse --short HEAD)
+
+# Define platform for Docker
+DOCKER_PLATFORM=$(shell docker info --format '{{.OSType}}/{{.Architecture}}')
+TARGETOS=$(word 1, $(subst /, ,$(DOCKER_PLATFORM)))
+TARGETARCH=$(word 2, $(subst /, ,$(DOCKER_PLATFORM)))
+
+# Maping Docker arch to Go arch according to https://go.dev/doc/install/source#environment
+ifeq ($(TARGETARCH),x86_64)
+  TARGETARCH=amd64
+endif
+ifeq ($(TARGETARCH),aarch64)
+  TARGETARCH=arm64
+endif
+
+# Write GO type platfomr to PLATFORM
+PLATFORM=$(TARGETOS)/$(TARGETARCH)
+
+# <IMAGE_TAG>
+IMAGE_TAG = $(REGISTRY)/$(APP):$(VERSION)-$(TARGETOS)-$(TARGETARCH)
+
+.PHONY: build clean
 
 # Aliases for short targets with platforms
 linux:
@@ -23,14 +46,6 @@ macos:
 	$(MAKE) build PLATFORM=darwin/amd64
 macos-arm64:
 	$(MAKE) build PLATFORM=darwin/arm64
-
-# Define APP + Version
-APP=$(shell basename $(shell git remote get-url origin))
-VERSION=$(shell git describe --tags --abbrev=0)-$(shell git rev-parse --short HEAD)
-# <IMAGE_TAG>
-IMAGE_TAG=$(REGISTRY)/$(APP_NAME):$(VERSION)
-
-.PHONY: build clean
 
 deps:
 	go mod tidy
@@ -58,19 +73,15 @@ build:
 
 # IMAGE: build for host OS/ARCH on which build started
 image:
-	@echo "Detecting host Docker platform..."
-	$(eval DOCKER_PLATFORM := $(shell docker info --format '{{.OSType}}/{{.Architecture}}'))
-	$(eval HOSTOS := $(word 1, $(subst /, ,$(DOCKER_PLATFORM))))
-	$(eval HOSTARCH := $(word 2, $(subst /, ,$(DOCKER_PLATFORM))))
-	$(if $(filter $(HOSTARCH),x86_64),$(eval HOSTARCH := amd64))
-	$(if $(filter $(HOSTARCH),aarch64),$(eval HOSTARCH := arm64))
-	@echo "HOST PLATFORM: $(DOCKER_PLATFORM) -> $(HOSTOS)/$(HOSTARCH)"
+	@echo "DOCKER type PLATFORM is: $(DOCKER_PLATFORM)"
+	@echo "GO type PLATFORM: $(PLATFORM) -> $(HOSTOS)/$(HOSTARCH)"
 	$(MAKE) build PLATFORM=$(HOSTOS)/$(HOSTARCH)
-	docker build --platform=$(DOCKER_PLATFORM) -t $(IMAGE_TAG) .
+	docker build --platform=$(PLATFORM) -t $(IMAGE_TAG) .
 	@echo "IMAGE BUILT: $(IMAGE_TAG)"
 
 push:
-	docker push ${REGISTRY}/${APP}:${VERSION}-$(PLATFORM)
+	@echo "Pushing image to $(REGISTRY)..."
+	docker push $(IMAGE_TAG)
 
 clean:
 	@echo "Removing $(BUILD_DIR)..."
