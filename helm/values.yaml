@@ -12,7 +12,7 @@ service:
 
 image:
   repository: alexskl25
-  tag: v1.0.3-1918783
+  tag: v1.0.4-0856eb9-linux
   arch: amd64
 
 secret:
