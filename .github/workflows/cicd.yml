@@ -2,7 +2,7 @@ name: KBOT-CICD
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "develop" ]
 
 jobs:
   ci:
@@ -36,17 +36,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - run: echo "Version=$(git describe --tags --abbrev=0)-$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
-      - uses: mikefarah/yq@master
+      - name: Set Version
+        run: |
+          echo "Version=$(git describe --tags --abbrev=0)-$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Update Helm chart image tag
+        uses: mikefarah/yq@master
         with:
           cmd: yq -i '.image.tag=strenv(Version)' helm/values.yaml
 
-      - run: |
-          git config --global user.name github-actions
-          git config --global user.email github-action@github.com
+      - name: Commit Helm chart changes
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add helm/values.yaml
           git diff --cached --quiet || git commit -m "update to version ${Version}"
           git push
