@@ -10,7 +10,7 @@ service:
 image:
   registry: "ghcr.io"
   repository: alexskl25/kbot
-  tag: v1.0.4-linux-amd64
+  tag: v1.0.5-9770c26
   os: linux
   arch: amd64
 secret:
