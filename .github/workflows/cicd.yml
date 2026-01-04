@@ -30,23 +30,30 @@ jobs:
           REGISTRY: ghcr.io/${{ github.actor }}
         run: make image push
 
-  cd:
-    name: CD
-    needs: ci
-    runs-on: ubuntu-latest
+cd:
+  name: CD
+  needs: ci
+  runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - run: echo "Version=$(git describe --tags --abbrev=0)-$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
 
-      - uses: mikefarah/yq@master
-        with:
-          cmd: yq -i '.image.tag=strenv(Version)' helm/values.yaml
+    - name: Set Version
+      run: |
+        echo "Version=$(git describe --tags --abbrev=0)-$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
-      - run: |
-          git config --global user.name github-actions
-          git config --global user.email github-action@github.com
-          git diff --cached --quiet || git commit -m "update to version ${Version}"
-          git push
+    - name: Update Helm chart image tag
+      uses: mikefarah/yq@master
+      with:
+        cmd: yq -i '.image.tag=strenv(Version)' helm/values.yaml
+
+    - name: Commit Helm chart changes
+      run: |
+        git config --global user.name "github-actions"
+        git config --global user.email "github-actions@github.com"
+        git add helm/values.yaml
+        git diff --cached --quiet || git commit -m "update to version ${Version}"
+        git push
