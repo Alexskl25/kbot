@@ -1,6 +1,8 @@
 name: KBOT-CICD
 
-on: push
+on:
+  push:
+    branches: [ "main" ]
 
 jobs:
   ci:
@@ -11,5 +13,5 @@ jobs:
         - name: Checkout
           users: actions/checkout@v2
 
-          -name: Run test
+          - name: Run test
             run: make test
