@@ -27,7 +27,7 @@ RUN --mount=type=cache,target=/tmp \
 # Linux final image
 FROM scratch AS final-linux
 WORKDIR /
-COPY --from=builder /go/src/app/build/kbot(*)? .
+COPY --from=builder /go/src/app/build/kbot(*)? /kbot
 # enable certs for https
 COPY --from=alpine:latest /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 ENTRYPOINT ["./kbot", "start"]
