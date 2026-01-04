@@ -8,6 +8,8 @@ jobs:
   ci:
     name: CI
     runs-on: ubuntu-latest
+    with:
+      fetch-depth: 0
 
     steps:
       - name: Checkout
@@ -20,3 +22,8 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      - name: Build and Push Docker Image
+        env:
+          APP: "kbot"
+          REGISTRY: ${{ secrets.DOCKER_HUB_USERNAME }}
+        run: make images push
