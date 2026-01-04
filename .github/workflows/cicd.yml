@@ -9,9 +9,9 @@ jobs:
     name: CI
     runs-on: ubuntu-latest
 
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v3
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
 
-        - name: Run test
-          run: make test
+      - name: Run test
+        run: make test
