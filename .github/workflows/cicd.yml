@@ -18,13 +18,14 @@ jobs:
 
       - name: Run test
         run: make test
-      - name: Docker Hub Login
+      - name: GitHub Packages Login
         uses: docker/login-action@v2
         with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.G_TOKEN }}
       - name: Build and Push Docker Image
         env:
           APP: "kbot"
-          REGISTRY: ${{ secrets.DOCKER_HUB_USERNAME }}
+          REGISTRY: ghcr.io/${{ github.actor }}
         run: make image push
